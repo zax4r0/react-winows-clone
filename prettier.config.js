@@ -4,6 +4,7 @@ const config = {
     useTabs: false,
     tabWidth: 4,
     printWidth: 120,
+    singleQuote: true,
 };
 
 export default config;
