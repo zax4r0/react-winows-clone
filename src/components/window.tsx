@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, ReactNode, useMemo } from 'react'
-import { X, Minus, Square, Maximize2 } from 'lucide-react'
+import { X, Minus, Square, Maximize2, Layout } from 'lucide-react'
 
 interface Position {
   x: number;
@@ -16,7 +16,9 @@ interface WindowProps {
   title: string;
   onClose: (id: number) => void;
   onFocus: (id: number) => void;
+  onMinimize: (id: number) => void;
   zIndex: number;
+  isMinimized: boolean;
   children: ReactNode;
 }
 
@@ -25,6 +27,7 @@ interface WindowData {
   title: string;
   zIndex: number;
   contentType: string;
+  isMinimized: boolean;
 }
 
 // Custom hook for drag functionality
@@ -57,7 +60,7 @@ const useDrag = (initialPosition: Position = { x: 0, y: 0 }) => {
   return { position, setPosition, handleMouseDown, handleMouseMove, handleMouseUp }
 }
 
-// Enhanced custom hook for multi-side resize functionality
+// Custom hook for resize functionality
 const useResize = (initialSize: Size = { width: 300, height: 200 }, initialPosition: Position = { x: 0, y: 0 }) => {
   const [size, setSize] = useState(initialSize)
   const [position, setPosition] = useState(initialPosition)
@@ -127,11 +130,10 @@ const useResize = (initialSize: Size = { width: 300, height: 200 }, initialPosit
 }
 
 // Memoized Window component
-const Window: React.FC<WindowProps> = React.memo(({ id, title, onClose, onFocus, zIndex, children }) => {
+const Window: React.FC<WindowProps> = React.memo(({ id, title, onClose, onFocus, onMinimize, zIndex, isMinimized, children }) => {
   const { position: dragPosition, handleMouseDown: handleDragMouseDown, handleMouseMove: handleDragMouseMove, handleMouseUp: handleDragMouseUp } = useDrag()
   const { size, setSize, position: resizePosition, setPosition: setResizePosition, handleResizeStart, handleResizeMove, handleResizeEnd } = useResize()
   const [isMaximized, setIsMaximized] = useState(false)
-  const [isMinimized, setIsMinimized] = useState(false)
   const prevSize = useRef<Size>({ width: 0, height: 0 })
   const prevPosition = useRef<Position>({ x: 0, y: 0 })
 
@@ -161,30 +163,31 @@ const Window: React.FC<WindowProps> = React.memo(({ id, title, onClose, onFocus,
     } else {
       prevSize.current = size
       prevPosition.current = position
-      setSize({ width: window.innerWidth, height: window.innerHeight })
+      setSize({ width: window.innerWidth, height: window.innerHeight - 40 }) // Subtract taskbar height
       setResizePosition({ x: 0, y: 0 })
     }
     setIsMaximized(!isMaximized)
   }, [isMaximized, size, position, setSize, setResizePosition])
 
-  const toggleMinimize = useCallback(() => {
-    setIsMinimized(!isMinimized)
-  }, [])
+  const handleMinimize = useCallback(() => {
+    onMinimize(id)
+  }, [onMinimize, id])
 
   const handleClose = useCallback(() => onClose(id), [onClose, id])
   const handleFocus = useCallback(() => onFocus(id), [onFocus, id])
 
   const windowStyle = useMemo(() => ({
     width: size.width,
-    height: isMinimized ? 40 : size.height,
+    height: size.height,
     left: position.x,
     top: position.y,
     zIndex,
-  }), [size, isMinimized, position, zIndex])
+    display: isMinimized ? 'none' : 'block',
+  }), [size, position, zIndex, isMinimized])
 
   return (
     <div
-      className={`absolute bg-white shadow-lg rounded-lg overflow-hidden ${isMinimized ? 'h-10' : ''}`}
+      className="absolute bg-white shadow-lg rounded-lg overflow-hidden"
       style={windowStyle}
       onMouseDown={handleFocus}
     >
@@ -194,31 +197,45 @@ const Window: React.FC<WindowProps> = React.memo(({ id, title, onClose, onFocus,
       >
         <span className="font-semibold">{title}</span>
         <div className="flex space-x-2">
-          <button className="p-1 hover:bg-gray-300 rounded" onClick={toggleMinimize}><Minus size={16} /></button>
+          <button className="p-1 hover:bg-gray-300 rounded" onClick={handleMinimize}><Minus size={16} /></button>
           <button className="p-1 hover:bg-gray-300 rounded" onClick={toggleMaximize}>
             {isMaximized ? <Square size={16} /> : <Maximize2 size={16} />}
           </button>
           <button className="p-1 hover:bg-gray-300 rounded" onClick={handleClose}><X size={16} /></button>
         </div>
       </div>
-      {!isMinimized && (
-        <>
-          <div className="p-4 overflow-auto" style={{ height: 'calc(100% - 40px)' }}>
-            {children}
-          </div>
-          {/* Resize handles */}
-          <div className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize" onMouseDown={(e) => handleResizeStart(e, 'bottom-right')} />
-          <div className="absolute bottom-0 left-0 w-4 h-4 cursor-sw-resize" onMouseDown={(e) => handleResizeStart(e, 'bottom-left')} />
-          <div className="absolute bottom-0 left-0 right-0 h-1 cursor-s-resize" onMouseDown={(e) => handleResizeStart(e, 'bottom')} />
-          <div className="absolute top-0 bottom-0 right-0 w-1 cursor-e-resize" onMouseDown={(e) => handleResizeStart(e, 'right')} />
-          <div className="absolute top-0 bottom-0 left-0 w-1 cursor-w-resize" onMouseDown={(e) => handleResizeStart(e, 'left')} />
-        </>
-      )}
+      <div className="p-4 overflow-auto" style={{ height: 'calc(100% - 40px)' }}>
+        {children}
+      </div>
+      {/* Resize handles */}
+      <div className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize" onMouseDown={(e) => handleResizeStart(e, 'bottom-right')} />
+      <div className="absolute bottom-0 left-0 w-4 h-4 cursor-sw-resize" onMouseDown={(e) => handleResizeStart(e, 'bottom-left')} />
+      <div className="absolute bottom-0 left-0 right-0 h-1 cursor-s-resize" onMouseDown={(e) => handleResizeStart(e, 'bottom')} />
+      <div className="absolute top-0 bottom-0 right-0 w-1 cursor-e-resize" onMouseDown={(e) => handleResizeStart(e, 'right')} />
+      <div className="absolute top-0 bottom-0 left-0 w-1 cursor-w-resize" onMouseDown={(e) => handleResizeStart(e, 'left')} />
     </div>
   )
 })
 
-// Sample window contents (unchanged)
+// Taskbar component
+const Taskbar: React.FC<{ windows: WindowData[], onFocus: (id: number) => void }> = React.memo(({ windows, onFocus }) => {
+  return (
+    <div className="fixed bottom-0 left-0 right-0 h-10 bg-gray-800 flex items-center px-2 space-x-2">
+      {windows.map(window => (
+        <button
+          key={window.id}
+          className={`h-8 px-2 rounded flex items-center space-x-1 ${window.isMinimized ? 'bg-gray-600' : 'bg-gray-700'} hover:bg-gray-500`}
+          onClick={() => onFocus(window.id)}
+        >
+          <Layout size={16} />
+          <span className="text-white text-sm truncate max-w-[100px]">{window.title}</span>
+        </button>
+      ))}
+    </div>
+  )
+})
+
+// Sample window contents
 const TextContent: React.FC = () => <p>This is a simple text content window.</p>
 
 const CounterContent: React.FC = () => {
@@ -235,7 +252,7 @@ const ImageContent: React.FC = () => (
   <img src="/placeholder.svg?height=150&width=300" alt="Placeholder" className="w-full h-auto" />
 )
 
-// Optimized WindowManager component (unchanged)
+// Main WindowManager component
 const WindowManager: React.FC = () => {
   const [windows, setWindows] = useState<WindowData[]>([])
 
@@ -251,6 +268,7 @@ const WindowManager: React.FC = () => {
           title: `Window ${prevWindows.length + 1}`,
           zIndex: newMaxZIndex,
           contentType,
+          isMinimized: false,
         }
       ]
     })
@@ -263,8 +281,22 @@ const WindowManager: React.FC = () => {
   const focusWindow = useCallback((id: number) => {
     setWindows(prevWindows => {
       const newMaxZIndex = Math.max(...prevWindows.map(w => w.zIndex)) + 1
-      return prevWindows.map(w => w.id === id ? { ...w, zIndex: newMaxZIndex } : w)
+      return prevWindows.map(w => 
+        w.id === id 
+          ? { ...w, zIndex: newMaxZIndex, isMinimized: false }
+          : w
+      )
     })
+  }, [])
+
+  const minimizeWindow = useCallback((id: number) => {
+    setWindows(prevWindows => 
+      prevWindows.map(w => 
+        w.id === id 
+          ? { ...w, isMinimized: true }
+          : w
+      )
+    )
   }, [])
 
   const renderWindowContent = useCallback((contentType: string) => {
@@ -287,35 +319,40 @@ const WindowManager: React.FC = () => {
       title={window.title}
       onClose={closeWindow}
       onFocus={focusWindow}
+      onMinimize={minimizeWindow}
       zIndex={window.zIndex}
+      isMinimized={window.isMinimized}
     >
       {renderWindowContent(window.contentType)}
     </Window>
-  )), [windows, closeWindow, focusWindow, renderWindowContent])
+  )), [windows, closeWindow, focusWindow, minimizeWindow, renderWindowContent])
 
   return (
-    <div className="relative w-full h-screen bg-gray-100 overflow-hidden p-4">
-      <div className="space-x-2 mb-4">
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          onClick={() => createWindow('text')}
-        >
-          New Text Window
-        </button>
-        <button
-          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-          onClick={() => createWindow('counter')}
-        >
-          New Counter Window
-        </button>
-        <button
-          className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
-          onClick={() => createWindow('image')}
-        >
-          New Image Window
-        </button>
+    <div className="relative w-full h-screen bg-gray-100 overflow-hidden">
+      <div className="absolute top-0 left-0 right-0 p-4">
+        <div className="space-x-2 mb-4">
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            onClick={() => createWindow('text')}
+          >
+            New Text Window
+          </button>
+          <button
+            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+            onClick={() => createWindow('counter')}
+          >
+            New Counter Window
+          </button>
+          <button
+            className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
+            onClick={() => createWindow('image')}
+          >
+            New Image Window
+          </button>
+        </div>
       </div>
       {memoizedWindows}
+      <Taskbar windows={windows} onFocus={focusWindow} />
     </div>
   )
 }
