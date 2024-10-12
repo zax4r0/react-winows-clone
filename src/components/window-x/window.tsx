@@ -1,8 +1,12 @@
+'use client';
+
 import React, { useState, useCallback, useRef, ReactNode, useMemo, useEffect } from 'react';
 import { X, Minus, Square, Maximize2, Layout, Laptop } from 'lucide-react';
 import { DesktopIcons } from './desktop-icons';
 import { Bus, EventPayloadMap } from '~/lib/event-bus';
 import { TextContent, CounterContent, ImageContent } from './window-content';
+import { ContextMenuComponent } from './context-menu';
+import { cn } from '~/lib/utils';
 
 interface Position {
     x: number;
@@ -37,7 +41,7 @@ interface WindowData {
     size: Size;
 }
 
-interface WindowState extends WindowData {
+interface WindowSXtate extends WindowData {
     isActive: boolean;
 }
 
@@ -324,14 +328,14 @@ const Window: React.FC<WindowProps> = React.memo(
         const [activeSnapZones, setActiveSnapZones] = useState<SnapZone[]>([]);
         const { position, size, setPosition, setSize, handleMouseDown } = useDragResizeSnap(
             { x: 100, y: 100 },
-            { width: 400, height: 300 },
+            { width: 900, height: 400 },
             id,
             onPositionChange,
             setActiveSnapZones,
         );
 
         const [isMaximized, setIsMaximized] = useState(false);
-        const prevSize = useRef<Size>({ width: 400, height: 300 });
+        const prevSize = useRef<Size>({ width: 700, height: 600 });
         const prevPosition = useRef<Position>({ x: 100, y: 100 });
 
         const toggleMaximize = useCallback(() => {
@@ -343,7 +347,7 @@ const Window: React.FC<WindowProps> = React.memo(
                 prevPosition.current = position;
                 setSize({
                     width: window.innerWidth,
-                    height: window.innerHeight - TASKBAR_HEIGHT,
+                    height: window.innerHeight,
                 });
                 setPosition({ x: 0, y: 0 });
             }
@@ -358,7 +362,7 @@ const Window: React.FC<WindowProps> = React.memo(
         const handleClose = useCallback(() => onClose(id), [onClose, id]);
         const handleFocus = useCallback(() => onFocus(id), [onFocus, id]);
 
-        const windowStyle = useMemo(
+        const windowSXtyle = useMemo(
             () => ({
                 width: size.width,
                 height: size.height,
@@ -373,31 +377,41 @@ const Window: React.FC<WindowProps> = React.memo(
 
         return (
             <div
-                className={`absolute select-none overflow-hidden rounded-lg bg-white shadow-lg ${isActive ? 'ring-2 ring-blue-500' : ''}`}
-                style={windowStyle}
+                className={cn('absolute select-none overflow-hidden bg-white shadow-lg dark:bg-[#17171A]', {
+                    'ring-2 ring-blue-500': isActive,
+                    'rounded-none': isMaximized,
+                    'rounded-lg': !isMaximized,
+                })}
+                style={windowSXtyle}
                 onMouseDown={(e) => {
                     handleMouseDown(e);
                     handleFocus();
                 }}
             >
                 <div
-                    className="flex cursor-move items-center justify-between bg-gray-200 p-2"
+                    className="flex cursor-move items-center justify-between bg-gray-200 p-2 dark:bg-[#08080A]"
                     onMouseDown={(e) => handleMouseDown(e)}
                 >
                     <span className="font-semibold">{title}</span>
                     <div className="flex space-x-2">
-                        <button className="rounded p-1 hover:bg-gray-300" onClick={handleMinimize}>
+                        <button
+                            className="rounded p-1 hover:bg-gray-300 dark:hover:bg-gray-800"
+                            onClick={handleMinimize}
+                        >
                             <Minus size={16} />
                         </button>
-                        <button className="rounded p-1 hover:bg-gray-300" onClick={toggleMaximize}>
+                        <button
+                            className="rounded p-1 hover:bg-gray-300 dark:hover:bg-gray-800"
+                            onClick={toggleMaximize}
+                        >
                             {isMaximized ? <Square size={16} /> : <Maximize2 size={16} />}
                         </button>
-                        <button className="rounded p-1 hover:bg-gray-300" onClick={handleClose}>
+                        <button className="rounded p-1 hover:bg-red-500" onClick={handleClose}>
                             <X size={16} />
                         </button>
                     </div>
                 </div>
-                <div className="overflow-auto p-4" style={{ height: 'calc(100% - 40px)' }}>
+                <div className="overflow-auto" style={{ height: 'calc(100% - 40px)' }}>
                     {children}
                 </div>
                 {/* Resize handles */}
@@ -439,15 +453,15 @@ const Window: React.FC<WindowProps> = React.memo(
 );
 
 const Taskbar: React.FC<{
-    windows: WindowState[];
+    windowsX: WindowSXtate[];
     onFocus: (id: number) => void;
-}> = React.memo(({ windows, onFocus }) => {
+}> = React.memo(({ windowsX, onFocus }) => {
     return (
-        <div className="fixed bottom-4 left-1/2 flex h-12 -translate-x-1/2 transform items-center space-x-2 rounded-full bg-gray-800 bg-opacity-60 px-4 shadow-lg backdrop-blur-md">
-            {windows.map((window) => (
+        <div className="fixed bottom-4 left-1/2 flex h-12 min-w-[98%] -translate-x-1/2 transform items-center space-x-2 rounded-sm bg-gray-800 bg-opacity-60 px-4 shadow-lg backdrop-blur-md">
+            {windowsX.map((window) => (
                 <button
                     key={window.id}
-                    className={`flex h-10 items-center space-x-1 rounded-full px-3 ${
+                    className={`flex h-10 items-center space-x-1 rounded-sm px-3 ${
                         window.isActive ? 'bg-blue-600' : window.isMinimized ? 'bg-gray-600' : 'bg-gray-700'
                     } transition-colors duration-200 hover:bg-gray-500`}
                     onClick={() => onFocus(window.id)}
@@ -480,18 +494,18 @@ export const SnapZones: React.FC<{ zones: SnapZone[] }> = ({ zones }) => {
 };
 
 const WindowManager: React.FC = () => {
-    const [windows, setWindows] = useState<WindowState[]>([]);
+    const [windowsX, setWindowsX] = useState<WindowSXtate[]>([]);
     const [activeSnapZones, setActiveSnapZones] = useState<SnapZone[]>([]);
     const [activeWindowId, setActiveWindowId] = useState<number | null>(null);
     const listenerRegistered = useRef(false); // Use a ref to track listener registration
 
     const createWindow = useCallback((contentType: string) => {
         console.log(contentType);
-        setWindows((prevWindows) => {
-            const newMaxZIndex = prevWindows.length > 0 ? Math.max(...prevWindows.map((w) => w.zIndex)) + 1 : 1;
-            const newWindow: WindowState = {
+        setWindowsX((prevWindowsX) => {
+            const newMaxZIndex = prevWindowsX.length > 0 ? Math.max(...prevWindowsX.map((w) => w.zIndex)) + 1 : 1;
+            const newWindow: WindowSXtate = {
                 id: Date.now(),
-                title: `Window ${prevWindows.length + 1}`,
+                title: `Window ${prevWindowsX.length + 1}`,
                 zIndex: newMaxZIndex,
                 contentType,
                 isMinimized: false,
@@ -499,18 +513,18 @@ const WindowManager: React.FC = () => {
                 size: { width: 400, height: 300 },
                 isActive: true,
             };
-            return [...prevWindows.map((w) => ({ ...w, isActive: false })), newWindow];
+            return [...prevWindowsX.map((w) => ({ ...w, isActive: false })), newWindow];
         });
     }, []);
 
     const closeWindow = useCallback((id: number) => {
-        setWindows((prevWindows) => prevWindows.filter((w) => w.id !== id));
+        setWindowsX((prevWindowsX) => prevWindowsX.filter((w) => w.id !== id));
     }, []);
 
     const focusWindow = useCallback((id: number) => {
-        setWindows((prevWindows) => {
-            const newMaxZIndex = Math.max(...prevWindows.map((w) => w.zIndex)) + 1;
-            return prevWindows.map((w) =>
+        setWindowsX((prevWindowsX) => {
+            const newMaxZIndex = Math.max(...prevWindowsX.map((w) => w.zIndex)) + 1;
+            return prevWindowsX.map((w) =>
                 w.id === id
                     ? {
                           ...w,
@@ -525,14 +539,14 @@ const WindowManager: React.FC = () => {
     }, []);
 
     const minimizeWindow = useCallback((id: number) => {
-        setWindows((prevWindows) =>
-            prevWindows.map((w) => (w.id === id ? { ...w, isMinimized: true, isActive: false } : w)),
+        setWindowsX((prevWindowsX) =>
+            prevWindowsX.map((w) => (w.id === id ? { ...w, isMinimized: true, isActive: false } : w)),
         );
         setActiveWindowId(null);
     }, []);
 
     const updateWindowPosition = useCallback((id: number, position: Position, size: Size) => {
-        setWindows((prevWindows) => prevWindows.map((w) => (w.id === id ? { ...w, position, size } : w)));
+        setWindowsX((prevWindowsX) => prevWindowsX.map((w) => (w.id === id ? { ...w, position, size } : w)));
     }, []);
 
     const renderWindowContent = useCallback((contentType: string) => {
@@ -561,9 +575,9 @@ const WindowManager: React.FC = () => {
         }
     }, []);
 
-    const memoizedWindows = useMemo(
+    const memoizedWindowsX = useMemo(
         () =>
-            windows.map((window) => (
+            windowsX.map((window) => (
                 <Window
                     key={window.id}
                     id={window.id}
@@ -579,14 +593,8 @@ const WindowManager: React.FC = () => {
                     {renderWindowContent(window.contentType)}
                 </Window>
             )),
-        [windows, closeWindow, focusWindow, minimizeWindow, updateWindowPosition, renderWindowContent],
+        [windowsX, closeWindow, focusWindow, minimizeWindow, updateWindowPosition, renderWindowContent],
     );
-
-    const handleDesktopContextMenu = useCallback((e: React.MouseEvent) => {
-        e.preventDefault();
-        // You can implement a context menu here
-        console.log('Desktop right-clicked at', e.clientX, e.clientY);
-    }, []);
 
     return (
         <div
@@ -594,13 +602,13 @@ const WindowManager: React.FC = () => {
             style={{
                 backgroundImage: "url('/Wall 1.jpg')",
             }}
-            onContextMenu={handleDesktopContextMenu}
         >
+            <ContextMenuComponent />
             <DesktopIcons />
 
-            {memoizedWindows}
+            {memoizedWindowsX}
             <SnapZones zones={activeSnapZones} />
-            <Taskbar windows={windows} onFocus={focusWindow} />
+            <Taskbar windowsX={windowsX} onFocus={focusWindow} />
         </div>
     );
 };

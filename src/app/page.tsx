@@ -1,7 +1,6 @@
 'use client'
 
-import Link from "next/link";
-import WindowManager from "~/ui/window/window";
+import WindowManager from "~/components/window-x/window";
 
 export default function HomePage() {
   return (

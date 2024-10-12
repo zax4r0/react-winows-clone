@@ -26,9 +26,7 @@ export class Bus<T extends EventPayloadMap> {
         }
 
         // Check if the callback is already subscribed
-        const isAlreadySubscribed = this.pools[race][event.name]!.some(
-            (callback) => callback === event.callback,
-        );
+        const isAlreadySubscribed = this.pools[race][event.name]!.some((callback) => callback === event.callback);
 
         if (!isAlreadySubscribed) {
             this.pools[race][event.name]!.push(event.callback);
@@ -54,11 +52,7 @@ export class Bus<T extends EventPayloadMap> {
     }
 
     // Unsubscribe from an event
-    remove<K extends keyof T>(
-        race: string,
-        name: K,
-        func: (payload: T[K]) => void,
-    ): void {
+    remove<K extends keyof T>(race: string, name: K, func: (payload: T[K]) => void): void {
         const racePool = this.pools[race];
         if (racePool) {
             const events = racePool[name];
