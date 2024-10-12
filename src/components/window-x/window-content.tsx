@@ -2,7 +2,15 @@ import { useState } from 'react';
 import { NotepadComponent } from '../notepad';
 
 export const ImageContent: React.FC = () => (
-    <img src="/api/placeholder/300/150" alt="Placeholder" className="h-auto w-full" />
+    <iframe
+        src="https://www.youtube.com/embed/dQw4w9WgXcQ?si=KHRHcF82taBWe2oW"
+        title="YouTube video player"
+        frameBorder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerPolicy="strict-origin-when-cross-origin"
+        allowFullScreen
+        className="h-full w-full"
+    ></iframe>
 );
 
 export const TextContent: React.FC = () => <NotepadComponent />;
