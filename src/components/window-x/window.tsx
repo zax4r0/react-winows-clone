@@ -391,6 +391,7 @@ const Window: React.FC<WindowProps> = React.memo(
                 <div
                     className="flex cursor-move items-center justify-between bg-gray-200 p-2 dark:bg-[#08080A]"
                     onMouseDown={(e) => handleMouseDown(e)}
+                    onDoubleClick={toggleMaximize}
                 >
                     <span className="font-semibold">{title}</span>
                     <div className="flex space-x-2">
