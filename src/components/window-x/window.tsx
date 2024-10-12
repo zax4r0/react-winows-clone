@@ -7,18 +7,19 @@ import { Bus, EventPayloadMap } from '~/lib/event-bus';
 import { TextContent, CounterContent, ImageContent } from './window-content';
 import { ContextMenuComponent } from './context-menu';
 import { cn } from '~/lib/utils';
+import Taskbar from './task-bar';
 
-interface Position {
+export interface Position {
     x: number;
     y: number;
 }
 
-interface Size {
+export interface Size {
     width: number;
     height: number;
 }
 
-interface WindowProps {
+export interface WindowProps {
     id: number;
     title: string;
     onClose: (id: number) => void;
@@ -31,7 +32,7 @@ interface WindowProps {
     onPositionChange: (id: number, position: Position, size: Size) => void;
 }
 
-interface WindowData {
+export interface WindowData {
     id: number;
     title: string;
     zIndex: number;
@@ -41,7 +42,7 @@ interface WindowData {
     size: Size;
 }
 
-interface WindowSXtate extends WindowData {
+export interface WindowSXtate extends WindowData {
     isActive: boolean;
 }
 
@@ -453,27 +454,27 @@ const Window: React.FC<WindowProps> = React.memo(
     },
 );
 
-const Taskbar: React.FC<{
-    windowsX: WindowSXtate[];
-    onFocus: (id: number) => void;
-}> = React.memo(({ windowsX, onFocus }) => {
-    return (
-        <div className="fixed bottom-4 left-1/2 flex h-12 min-w-[98%] -translate-x-1/2 transform items-center space-x-2 rounded-sm bg-gray-800 bg-opacity-60 px-4 shadow-lg backdrop-blur-md">
-            {windowsX.map((window) => (
-                <button
-                    key={window.id}
-                    className={`flex h-10 items-center space-x-1 rounded-sm px-3 ${
-                        window.isActive ? 'bg-blue-600' : window.isMinimized ? 'bg-gray-600' : 'bg-gray-700'
-                    } transition-colors duration-200 hover:bg-gray-500`}
-                    onClick={() => onFocus(window.id)}
-                >
-                    <Layout size={16} className="text-white" />
-                    <span className="max-w-[100px] truncate text-sm text-white">{window.title}</span>
-                </button>
-            ))}
-        </div>
-    );
-});
+// const Taskbar: React.FC<{
+//     windowsX: WindowSXtate[];
+//     onFocus: (id: number) => void;
+// }> = React.memo(({ windowsX, onFocus }) => {
+//     return (
+//         <div className="fixed bottom-4 left-1/2 flex h-12 min-w-[98%] -translate-x-1/2 transform items-center space-x-2 rounded-sm bg-gray-800 bg-opacity-60 px-4 shadow-lg backdrop-blur-md">
+//             {windowsX.map((window) => (
+//                 <button
+//                     key={window.id}
+//                     className={`flex h-10 items-center space-x-1 rounded-sm px-3 ${
+//                         window.isActive ? 'bg-blue-600' : window.isMinimized ? 'bg-gray-600' : 'bg-gray-700'
+//                     } transition-colors duration-200 hover:bg-gray-500`}
+//                     onClick={() => onFocus(window.id)}
+//                 >
+//                     <Layout size={16} className="text-white" />
+//                     <span className="max-w-[100px] truncate text-sm text-white">{window.title}</span>
+//                 </button>
+//             ))}
+//         </div>
+//     );
+// });
 
 export const SnapZones: React.FC<{ zones: SnapZone[] }> = ({ zones }) => {
     return (
