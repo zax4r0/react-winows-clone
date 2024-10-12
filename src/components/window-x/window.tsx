@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useCallback, useRef, ReactNode, useMemo, useEffect } from 'react';
-import { X, Minus, Square, Maximize2, Layout, Laptop } from 'lucide-react';
+import React, { useState, useCallback, useRef, type ReactNode, useMemo, useEffect } from 'react';
+import { X, Minus, Square, Maximize2 } from 'lucide-react';
 import { DesktopIcons } from './desktop-icons';
-import { Bus, EventPayloadMap } from '~/lib/event-bus';
+import { Bus, type EventPayloadMap } from '~/lib/event-bus';
 import { TextContent, CounterContent, ImageContent } from './window-content';
 import { ContextMenuComponent } from './context-menu';
 import { cn } from '~/lib/utils';
@@ -184,8 +184,8 @@ const useDragResizeSnap = (
                 setPosition(newPosition);
                 onPositionChange(id, newPosition, size);
             } else if (isResizing) {
-                let newPosition = { ...position };
-                let newSize = { ...size };
+                const newPosition = { ...position };
+                const newSize = { ...size };
 
                 switch (resizeDirection) {
                     case 'n':
@@ -454,27 +454,7 @@ const Window: React.FC<WindowProps> = React.memo(
     },
 );
 
-// const Taskbar: React.FC<{
-//     windowsX: WindowSXtate[];
-//     onFocus: (id: number) => void;
-// }> = React.memo(({ windowsX, onFocus }) => {
-//     return (
-//         <div className="fixed bottom-4 left-1/2 flex h-12 min-w-[98%] -translate-x-1/2 transform items-center space-x-2 rounded-sm bg-gray-800 bg-opacity-60 px-4 shadow-lg backdrop-blur-md">
-//             {windowsX.map((window) => (
-//                 <button
-//                     key={window.id}
-//                     className={`flex h-10 items-center space-x-1 rounded-sm px-3 ${
-//                         window.isActive ? 'bg-blue-600' : window.isMinimized ? 'bg-gray-600' : 'bg-gray-700'
-//                     } transition-colors duration-200 hover:bg-gray-500`}
-//                     onClick={() => onFocus(window.id)}
-//                 >
-//                     <Layout size={16} className="text-white" />
-//                     <span className="max-w-[100px] truncate text-sm text-white">{window.title}</span>
-//                 </button>
-//             ))}
-//         </div>
-//     );
-// });
+Window.displayName = 'Window';
 
 export const SnapZones: React.FC<{ zones: SnapZone[] }> = ({ zones }) => {
     return (
@@ -497,6 +477,7 @@ export const SnapZones: React.FC<{ zones: SnapZone[] }> = ({ zones }) => {
 
 const WindowManager: React.FC = () => {
     const [windowsX, setWindowsX] = useState<WindowSXtate[]>([]);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [activeSnapZones, setActiveSnapZones] = useState<SnapZone[]>([]);
     const [activeWindowId, setActiveWindowId] = useState<number | null>(null);
     const listenerRegistered = useRef(false); // Use a ref to track listener registration

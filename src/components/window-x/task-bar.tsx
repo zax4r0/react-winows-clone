@@ -1,7 +1,7 @@
 import React from 'react';
 import { Layout } from 'lucide-react';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '~/components/ui/hover-card';
-import { WindowSXtate } from './window';
+import { type WindowSXtate } from './window';
 
 interface TaskbarProps {
     windowsX: WindowSXtate[];
@@ -41,5 +41,7 @@ const Taskbar: React.FC<TaskbarProps> = React.memo(({ windowsX, onFocus }) => {
         </div>
     );
 });
+
+Taskbar.displayName = 'Taskbar';
 
 export default Taskbar;

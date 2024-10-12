@@ -108,10 +108,7 @@ export function ContextMenuComponent() {
     return (
         <>
             <ContextMenu>
-                <ContextMenuTrigger
-                    className="flex h-full w-full items-center justify-center"
-                    onClick={() => {}} // Handler for the context menu trigger
-                ></ContextMenuTrigger>
+                <ContextMenuTrigger className="flex h-full w-full items-center justify-center"></ContextMenuTrigger>
                 <ContextMenuContent className="w-64">
                     {actions.map((action, index) => {
                         if (action.subActions) {

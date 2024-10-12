@@ -1,7 +1,5 @@
 // Define a generic interface for event payloads
-export interface EventPayloadMap {
-    [eventName: string]: any;
-}
+export type EventPayloadMap = Record<string, any>;
 
 // Define a type-safe BusEvent interface
 export type BusEvent<T extends EventPayloadMap, K extends keyof T> = {
@@ -11,9 +9,7 @@ export type BusEvent<T extends EventPayloadMap, K extends keyof T> = {
 
 // Type-safe Event Bus class
 export class Bus<T extends EventPayloadMap> {
-    private pools: {
-        [race: string]: { [K in keyof T]?: Array<(payload: T[K]) => void> };
-    } = {};
+    private pools: Record<string, { [K in keyof T]?: Array<(payload: T[K]) => void> }> = {};
 
     // Subscribe to an event with type safety
     on<K extends keyof T>(race: string, event: BusEvent<T, K>): () => void {

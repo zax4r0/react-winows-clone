@@ -1,5 +1,5 @@
-import { Laptop, FileText, Plus, Image, Clock } from 'lucide-react';
-import { ReactNode } from 'react';
+import { Laptop, FileText, Plus, Image as ImageIcon, Clock } from 'lucide-react';
+import { type ReactNode } from 'react';
 import { bus, WINDOW_X, WINDOW_X_EVENTS } from './window';
 
 const DesktopIcon: React.FC<{ label: string; onClick: (e: React.MouseEvent) => void; icon: ReactNode }> = ({
@@ -39,7 +39,7 @@ export const DesktopIcons: React.FC = () => {
                 onClick={(e) => createWindow(e, 'counter')}
             />
             <DesktopIcon
-                icon={<Image size={30} />}
+                icon={<ImageIcon size={30} />}
                 label="New Image Window"
                 onClick={(e) => createWindow(e, 'image')}
             />
